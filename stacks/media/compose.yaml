@@ -1,0 +1,144 @@
+# Stack "media": VPN-bound downloads, *arr apps, Jellyfin, Seerr.
+# Deployed ONLY by Portainer (Git stack, compose path stacks/media/compose.yaml).
+#
+# Immutable: every image pinned by digest (Renovate bumps them via PR), no
+# config files bind-mounted from the host. Only app state (${CONFIG_ROOT})
+# and media (${DATA_ROOT}) live on disk.
+#
+# Portainer stack environment variables (set in the UI, NOT in git):
+#   see stacks/media/stack.env.example
+
+x-arr: &arr
+  restart: unless-stopped
+  security_opt: [no-new-privileges:true]
+  networks: [proxy]
+
+x-lsio-env: &lsio-env
+  PUID: ${PUID}
+  PGID: ${PGID}
+  TZ: ${TZ}
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest@sha256:2733bb22b27e3efa7a9f2cef9057ec12791b8b225793fcd3dbfd0508404dfc25
+    container_name: gluetun
+    restart: unless-stopped
+    cap_add: [NET_ADMIN]
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      TZ: ${TZ}
+      VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER}
+      VPN_TYPE: wireguard
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY}
+      WIREGUARD_ADDRESSES: ${WIREGUARD_ADDRESSES}
+      SERVER_COUNTRIES: ${VPN_SERVER_COUNTRIES}
+      VPN_PORT_FORWARDING: ${VPN_PORT_FORWARDING:-off}
+    volumes:
+      - ${CONFIG_ROOT}/gluetun:/gluetun
+    networks: [proxy]
+    labels:
+      # qBittorrent shares this container's network, so its route lives here
+      - traefik.enable=true
+      - traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.${DOMAIN}`)
+      - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest@sha256:b522f9f4b769f8f36d49d22d5eb6a92e9aa18904c6a1830b1439df511ec21983
+    container_name: qbittorrent
+    restart: unless-stopped
+    network_mode: service:gluetun # all traffic goes through the VPN, or nowhere
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      <<: *lsio-env
+      WEBUI_PORT: 8080
+    volumes:
+      - ${CONFIG_ROOT}/qbittorrent:/config
+      - ${DATA_ROOT}:/data
+
+  prowlarr:
+    <<: *arr
+    image: lscr.io/linuxserver/prowlarr:latest@sha256:f9151e5bc1025c6d0a630d503210cdcb6bb55a7cc098562609d96a408d838902
+    container_name: prowlarr
+    environment: *lsio-env
+    volumes:
+      - ${CONFIG_ROOT}/prowlarr:/config
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.prowlarr.rule=Host(`prowlarr.${DOMAIN}`)
+      - traefik.http.services.prowlarr.loadbalancer.server.port=9696
+
+  sonarr:
+    <<: *arr
+    image: lscr.io/linuxserver/sonarr:latest@sha256:f247545d23ba8b233d6604575347e48a623fe6ad75dda02348bf81917f3b5c06
+    container_name: sonarr
+    environment: *lsio-env
+    volumes:
+      - ${CONFIG_ROOT}/sonarr:/config
+      - ${DATA_ROOT}:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN}`)
+      - traefik.http.services.sonarr.loadbalancer.server.port=8989
+
+  radarr:
+    <<: *arr
+    image: lscr.io/linuxserver/radarr:latest@sha256:7dfd049e79c00b16fbc29c3f5d96a9e7b9e73a23930b4c5b3c4541d60b366814
+    container_name: radarr
+    environment: *lsio-env
+    volumes:
+      - ${CONFIG_ROOT}/radarr:/config
+      - ${DATA_ROOT}:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN}`)
+      - traefik.http.services.radarr.loadbalancer.server.port=7878
+
+  bazarr:
+    <<: *arr
+    image: lscr.io/linuxserver/bazarr:latest@sha256:c1673816321156b904af9b7e6415ea547ae9622e4acc375358f1e1eb9ed1e904
+    container_name: bazarr
+    environment: *lsio-env
+    volumes:
+      - ${CONFIG_ROOT}/bazarr:/config
+      - ${DATA_ROOT}/media:/data/media
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bazarr.rule=Host(`bazarr.${DOMAIN}`)
+      - traefik.http.services.bazarr.loadbalancer.server.port=6767
+
+  jellyfin:
+    <<: *arr
+    image: lscr.io/linuxserver/jellyfin:latest@sha256:1bb4f88d822a0510bb3604b68aacb80d77c1d2a30181e500090c65111b98723b
+    container_name: jellyfin
+    environment: *lsio-env
+    # Intel/AMD hardware transcoding: uncomment if /dev/dri exists on the host
+    # devices:
+    #   - /dev/dri:/dev/dri
+    volumes:
+      - ${CONFIG_ROOT}/jellyfin:/config
+      - ${DATA_ROOT}/media:/data/media:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.jellyfin.rule=Host(`jellyfin.${DOMAIN}`)
+      - traefik.http.services.jellyfin.loadbalancer.server.port=8096
+
+  seerr:
+    <<: *arr
+    image: ghcr.io/seerr-team/seerr:latest@sha256:27602401178d54f1964442287b9f23f67a3fa2252645ee8065839ea1c3f69e45
+    container_name: seerr
+    init: true # required: the image ships without an init process
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ${CONFIG_ROOT}/seerr:/app/config # must be owned by UID 1000, see scripts/init.sh
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.seerr.rule=Host(`requests.${DOMAIN}`)
+      - traefik.http.services.seerr.loadbalancer.server.port=5055
+
+networks:
+  proxy:
+    external: true # created once during bootstrap

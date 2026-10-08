@@ -1,0 +1,31 @@
+# Gate for main: main is what Portainer deploys, so nothing reaches it unvalidated.
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Every image pinned by digest
+        run: ./scripts/check-pins.sh
+
+      - name: Compose files render
+        run: |
+          # dummy values: this checks syntax and interpolation, not real config
+          for f in stacks/*/stack.env.example; do
+            set -a; . "$f"; set +a
+          done
+          for f in stacks/*/compose.yaml bootstrap/*.compose.yaml; do
+            echo "::group::$f"
+            docker compose -f "$f" config -q
+            echo "::endgroup::"
+          done
+
+      - name: Shell scripts
+        run: shellcheck -e SC2015 install.sh scripts/*.sh

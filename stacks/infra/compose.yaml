@@ -1,0 +1,71 @@
+# Stack "infra": Traefik + AdGuard Home.
+# Deployed ONLY by Portainer (Git stack, compose path stacks/infra/compose.yaml).
+# Kept apart from the media stack so a bad media change can't touch the house's DNS.
+#
+# Immutable: every image pinned by digest (Renovate bumps them via PR), no
+# config files bind-mounted from the host. Traefik is configured purely by
+# CLI flags and labels, both in git. Only state lives on disk (${CONFIG_ROOT}).
+#
+# Portainer stack environment variables (set in the UI, NOT in git):
+#   see stacks/infra/stack.env.example
+
+services:
+  traefik:
+    image: traefik:v3.6@sha256:31267173a15b4944e797a76ffd9c419707c8d8b32fe5b610f80cd0cfa05f372d
+    container_name: traefik
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "80:80"
+    command:
+      # Plain HTTP on the LAN under ${DOMAIN} (home.arpa = reserved for home networks).
+      # No domain, no certificates. Remote access is encrypted by Tailscale (docs/06).
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=proxy
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.middlewares=lan-only@docker,secure-headers@docker
+      - --api.dashboard=true
+      - --ping=true
+      - --log.level=INFO
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks: [proxy]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)
+      - traefik.http.routers.traefik.service=api@internal
+      # Applied to every router via the web entrypoint (see command).
+      # LAN + Tailscale only. Defense in depth: nothing is port-forwarded anyway.
+      - traefik.http.middlewares.lan-only.ipallowlist.sourcerange=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10
+      - traefik.http.middlewares.secure-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.secure-headers.headers.referrerPolicy=same-origin
+      - traefik.http.middlewares.secure-headers.headers.customFrameOptionsValue=SAMEORIGIN
+
+  adguard:
+    image: adguard/adguardhome:latest@sha256:aba9e3bf0613be3ba3755e1fc311b126e2c24bec25e18b6483894a88283074f0
+    container_name: adguard
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      # Admin UI by IP: setup wizard, and the way in when DNS itself is broken
+      - "3000:3000/tcp"
+    volumes:
+      - ${CONFIG_ROOT}/adguard/work:/opt/adguardhome/work
+      - ${CONFIG_ROOT}/adguard/conf:/opt/adguardhome/conf
+    networks: [proxy]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.adguard.rule=Host(`adguard.${DOMAIN}`)
+      - traefik.http.services.adguard.loadbalancer.server.port=3000
+
+networks:
+  proxy:
+    external: true # created once during bootstrap

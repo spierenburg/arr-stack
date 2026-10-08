@@ -1,0 +1,27 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "pinDigests": true,
+  "schedule": ["before 6am on saturday"],
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Infra stack = the house's DNS + proxy. Never batch with media apps.",
+      "matchFileNames": ["stacks/infra/**"],
+      "groupName": "infra stack images",
+      "labels": ["infra"]
+    },
+    {
+      "description": "Media apps: one PR per week for all of them.",
+      "matchFileNames": ["stacks/media/**"],
+      "groupName": "media stack images",
+      "labels": ["media"]
+    },
+    {
+      "description": "Portainer is updated by hand (see bootstrap/), keep its PR separate.",
+      "matchFileNames": ["bootstrap/**"],
+      "groupName": "portainer",
+      "labels": ["bootstrap"]
+    }
+  ]
+}
