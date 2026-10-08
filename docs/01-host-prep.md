@@ -38,10 +38,20 @@ sudo systemctl restart systemd-resolved
 sudo ss -ltnup 'sport = :53'      # should print nothing now
 ```
 
+## Git and your copy of the repo
+
+You need **your own copy** of this repo on GitHub first: [README → Step 0](../README.md#step-0-make-your-own-copy-required), which is one click on *Use this template*. Then on the host:
+
+```bash
+sudo apt install -y git          # skip if `git --version` already works
+git clone https://github.com/<you>/arr-stack.git && cd arr-stack
+```
+
+`<you>` is **your** GitHub account, not the template's. A private copy asks for your GitHub username and a token when cloning: use the read-only token from [docs/03](03-gitops-stacks.md#repository-setup-on-github).
+
 ## Folders and host checks
 
 ```bash
-git clone https://github.com/<you>/arr-stack.git && cd arr-stack
 sudo ./scripts/init.sh
 ```
 
