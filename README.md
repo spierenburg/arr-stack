@@ -55,17 +55,28 @@ A self-hosted media stack on one Docker host, deployed **only** through Portaine
 
 ## Requirements
 
-- A Linux host (Debian/Ubuntu) with Docker Engine and the Compose plugin, and a fixed LAN IP
-- A GitHub account for this repo, with the Renovate app installed
+- A Linux host (Debian/Ubuntu) with Docker Engine, the Compose plugin, `git`, and a fixed LAN IP
+- A free GitHub account
 - A VPN provider with WireGuard support (ideally with port forwarding, e.g. ProtonVPN)
 - One filesystem with room for downloads + media
 
+## Step 0: make your own copy (required)
+
+**Don't deploy from this repo directly.** Portainer runs whatever is on the `main` branch of the repo you point it at. If that's this repo, every change its owner pushes lands on your server within 5 minutes, and you can't merge your own update PRs. You need a copy that only you control.
+
+1. Log in to GitHub, open this repo and click **Use this template → Create a new repository**.
+2. Owner: your account. Name: `arr-stack`. Public or private both work. A private copy makes the installer ask for a read-only token ([docs/03](docs/03-gitops-stacks.md#repository-setup-on-github)).
+3. Click **Create repository**. You now have `https://github.com/<you>/arr-stack`, a clean copy with its own history, and nothing flows back from this repo.
+
+No git knowledge needed for this step. From here on, "the repo" means **your copy**, and the installer refuses to deploy from the template itself.
+
 ## Fast path: the installer
 
-On the Docker host, after pushing this repo to your own GitHub:
+On the Docker host:
 
 ```bash
-git clone https://github.com/<you>/arr-stack.git && cd arr-stack
+sudo apt install -y git                                    # if `git --version` fails
+git clone https://github.com/<you>/arr-stack.git && cd arr-stack   # YOUR copy from step 0
 ./install.sh --check          # read-only preflight
 sudo ./install.sh             # interactive; or --config install.env [--yes]
 ```

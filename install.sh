@@ -19,6 +19,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 REPO_DIR=$(pwd)
+# The public template. Deploying from it would hand its owner's pushes to your server.
+TEMPLATE_REPO=spierenburg/arr-stack
 PORTAINER_API=https://127.0.0.1:9443/api   # local, self-signed: curl -k is used only for this
 
 # ------------------------------------------------------------------ output
@@ -133,7 +135,15 @@ collect() {
   ask VPN_SERVER_COUNTRIES  "VPN server countries" "Netherlands"
   ask VPN_PORT_FORWARDING   "Provider port forwarding (on/off)" "off"
   echo "    ${B}GitOps${N}"
+  echo "    The deploy repo decides what runs on this server: it must be YOUR copy (README step 0)."
   ask REPO_URL          "Git repo Portainer deploys from" "$remote_def"
+  local slug
+  slug=$(tr '[:upper:]' '[:lower:]' <<<"$REPO_URL" \
+    | sed -E 's#^(https?://|ssh://)?(git@)?github\.com[:/]##; s#\.git$##; s#/+$##')
+  if [[ $slug == "$TEMPLATE_REPO" ]]; then
+    die "$REPO_URL is the template, not your copy. On GitHub: Use this template → create <you>/arr-stack,
+      then: git clone https://github.com/<you>/arr-stack.git && cd arr-stack && sudo ./install.sh"
+  fi
   ask REPO_REF          "Branch" "refs/heads/main"
   [[ $REPO_REF == refs/* ]] || REPO_REF=refs/heads/$REPO_REF
   echo "    ${B}Portainer${N}"
@@ -191,7 +201,8 @@ summary() {
     4. Create Portainer Git stacks 'infra' and 'media'
          repo  $REPO_URL @ $REPO_REF
          poll  every 5m, re-pull images
-       Portainer then deploys them from git.
+       Portainer then deploys them from git. Anyone who can push to that
+       repo's $REPO_REF controls this server: make sure that's only you.
     Services will live at <app>.$DOMAIN
 EOF
   confirm "Proceed?" || die "aborted"
