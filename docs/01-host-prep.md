@@ -67,7 +67,7 @@ sudo ./scripts/init.sh
 
 Use different paths or a different user if you like (`sudo PUID=... CONFIG_ROOT=... DATA_ROOT=... ./scripts/init.sh`). They must match the Portainer stack variables later.
 
-Why one `/data`: qBittorrent, Sonarr and Radarr all mount the same `/data`, so an import is a hardlink. It's instant, takes no extra space, and seeding continues from the same bytes. If `torrents/` and `media/` are on different filesystems, every import becomes a full copy. See the [TRaSH Guides](https://trash-guides.info/File-and-Folder-Structure/).
+Why one `/data`: qBittorrent, Sonarr and Radarr (and SABnzbd, if you add it) all mount the same `/data`, so an import is a hardlink, or for Usenet an instant move. It's instant, takes no extra space, and seeding continues from the same bytes. If `torrents/` and `media/` are on different filesystems, every import becomes a full copy. See the [TRaSH Guides](https://trash-guides.info/File-and-Folder-Structure/).
 
 **Check:** `init.sh` ends with `Host ready`.
 

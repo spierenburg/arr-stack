@@ -8,7 +8,7 @@ A self-hosted media stack on one Docker host, deployed **only** through Portaine
         │  Portainer polls every 5 min, deploys the exact digests in git
         ▼
 ┌──────────────────────── one Docker host ──────────────────────────────┐
-│ Portainer :9443  (bootstrapped once by hand, manages the two stacks)  │
+│ Portainer :9443  (bootstrapped once by hand, manages the stacks)      │
 │                                                                       │
 │ stack "infra"                                                         │
 │   AdGuard Home :53   DNS + ad blocking, *.home.arpa → this host       │
@@ -19,7 +19,10 @@ A self-hosted media stack on one Docker host, deployed **only** through Portaine
 │   sonarr / radarr / bazarr / prowlarr .home.arpa                      │
 │   qbittorrent.home.arpa ─▶ Gluetun ─▶ VPN only                        │
 │                                                                       │
-│ /srv/data ── torrents/ ──hardlink──▶ media/   (one filesystem)        │
+│ stack "usenet" (optional)                                             │
+│   sabnzbd.home.arpa  ─▶ your Usenet provider (SSL)                    │
+│                                                                       │
+│ /srv/data ── torrents/, usenet/ ──▶ media/   (one filesystem)         │
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
