@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# arr-stack installer: takes a fresh Debian/Ubuntu Docker host to two running
+# arr-stack installer: takes a fresh Debian/Ubuntu Docker host to running
 # Portainer GitOps stacks.
 #
 # It never deploys the stacks itself. It prepares the host, bootstraps
-# Portainer, and creates the `infra` and `media` stacks as *Git stacks* through
+# Portainer, and creates the `infra`, `media` and optional `usenet` stacks as *Git stacks* through
 # the Portainer API. From then on Portainer deploys from git, exactly as in the
 # manual guide (docs/). Re-runnable: every step checks state first and skips
 # what's already done. Existing stacks are never modified.

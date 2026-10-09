@@ -11,7 +11,7 @@
 
 Read-only debugging is always fine: `docker logs`, `docker ps`, `docker inspect`, and the Portainer log and console views.
 
-## Two stacks
+## The stacks
 
 | Stack | Compose path | Contains | Why separate |
 |---|---|---|---|

@@ -46,7 +46,7 @@ For a single *arr app it's often easier to use the app's own *System → Backup 
 
 | Situation | Effect | What to do |
 |---|---|---|
-| **Internet down** | Local names, HTTPS, Jellyfin playback and logins all keep working. Downloads, metadata and GitOps polling pause. | Nothing. Everything resumes on its own. |
+| **Internet down** | Local names, Jellyfin playback and logins all keep working. Downloads, metadata and GitOps polling pause. | Nothing. Everything resumes on its own. |
 | **Server down / rebooting** | **Nobody in the house can browse**, because AdGuard is the only DNS. | Short-term: set the router's DHCP DNS back to the router. Long-term: second AdGuard instance ([docs/04](04-dns-adguard.md#redundancy-recommended-once-the-house-depends-on-it)). |
 | **VPN down** | qBittorrent has no network at all, by design. Nothing leaks. | Gluetun logs. Usually a provider issue. Change `VPN_SERVER_COUNTRIES` in the stack variables or wait. |
 | **GitHub unreachable** | Running containers are unaffected. New merges just don't deploy yet. | Nothing. |
@@ -64,6 +64,7 @@ Look first: Portainer → Containers → *container* → **Logs**, or `docker lo
 | `403 Forbidden` from every app | `lan-only` rejects the client's source IP | Client not on LAN or Tailscale? If your LAN uses an unusual range, extend the `ipallowlist.sourcerange` label in `stacks/infra/compose.yaml` |
 | `404 page not found` | Container not running, or label typo | Portainer stack view. Router labels in the compose file |
 | `Bad Gateway` on qBittorrent | Gluetun unhealthy, so qBittorrent is down too | `gluetun` logs |
+| SABnzbd: `Access denied - Hostname verification failed` | No login set yet, so SABnzbd only accepts its IP and own hostname | Open `http://SERVER_IP:8080`, set a login under Config → General ([docs/05](05-apps.md#51b-sabnzbd-only-with-the-optional-usenet-stack)) |
 | Name doesn't resolve | Client not using AdGuard (IPv6 DNS, cached lease, hard-coded DNS on device) | `nslookup sonarr.DOMAIN` on the client and look at which server answered |
 | Sonarr/Radarr "path does not exist" on import | Mismatched mounts | Every app must see `/data/...`, never `/downloads` or `/tv` |
 | Seerr crash-loops with permission errors | Config folder not owned by UID 1000 | `sudo chown -R 1000:1000 /opt/arr/config/seerr` |

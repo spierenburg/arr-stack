@@ -105,13 +105,14 @@ Open `http://requests.home.arpa`:
 ## End-to-end check
 
 1. Request a movie in Seerr.
-2. It appears in Radarr, and the download shows up in qBittorrent under the `movies` category.
+2. It appears in Radarr, and the download shows up in qBittorrent (or SABnzbd) under the `movies` category.
 3. Once it finishes, Radarr imports it and Jellyfin shows it after a library scan, or sooner if you add Jellyfin under Radarr → Connect.
 4. **Confirm the hardlink worked:**
    ```bash
    stat -c '%h %n' /srv/data/media/movies/*/*.mkv
    ```
    The first number should be `2`, meaning one file with two names. If it's `1`, the import made a copy. Re-check the paths in 5.2.
+   Usenet downloads don't seed, so Radarr moves them instead: `1` is normal for those.
 
 ## Next step: quality profiles
 
