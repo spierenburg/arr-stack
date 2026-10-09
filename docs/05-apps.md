@@ -111,8 +111,8 @@ Open `http://requests.home.arpa`:
    ```bash
    stat -c '%h %n' /srv/data/media/movies/*/*.mkv
    ```
-   The first number should be `2`, meaning one file with two names. If it's `1`, the import made a copy. Re-check the paths in 5.2.
-   Usenet downloads don't seed, so Radarr moves them instead: `1` is normal for those.
+   The first number should be `2`, meaning one file with two names. If it's `1` for a torrent download, the import made a copy. Re-check the paths in 5.2.
+   Usenet downloads don't seed, so Radarr moves them instead: `1` is normal for those. Step 2 tells you which client it came from.
 
 ## Next step: quality profiles
 

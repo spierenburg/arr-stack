@@ -36,7 +36,7 @@ The script only reads and never touches containers. Sonarr, Radarr, Prowlarr and
 Copy the archives **off this machine** too, for example to a NAS or cloud storage. Delete old archives now and then.
 
 **Restore** (state only; images come from git):
-1. Portainer → Stacks → `media` (or `infra`) → **Stop this stack**.
+1. Portainer → Stacks → `media` (or `infra`, or `usenet`) → **Stop this stack**.
 2. `sudo tar -xzf arr-config-YYYYMMDD-HHMMSS.tar.gz -C /opt/arr/config ./sonarr` restores one app. Leave off `./sonarr` to restore everything.
 3. Portainer → **Start this stack**.
 
@@ -64,7 +64,7 @@ Look first: Portainer → Containers → *container* → **Logs**, or `docker lo
 | `403 Forbidden` from every app | `lan-only` rejects the client's source IP | Client not on LAN or Tailscale? If your LAN uses an unusual range, extend the `ipallowlist.sourcerange` label in `stacks/infra/compose.yaml` |
 | `404 page not found` | Container not running, or label typo | Portainer stack view. Router labels in the compose file |
 | `Bad Gateway` on qBittorrent | Gluetun unhealthy, so qBittorrent is down too | `gluetun` logs |
-| SABnzbd: `Access denied - Hostname verification failed` | No login set yet, so SABnzbd only accepts its IP and own hostname | Open `http://SERVER_IP:8080`, set a login under Config → General ([docs/05](05-apps.md#51b-sabnzbd-only-with-the-optional-usenet-stack)) |
+| SABnzbd: `Access denied - Hostname verification failed` | No login set yet, so SABnzbd only accepts IP addresses and its own hostname | Open `http://SERVER_IP:8080`, set a login under Config → General → Security ([docs/05](05-apps.md#51b-sabnzbd-only-with-the-optional-usenet-stack)) |
 | Name doesn't resolve | Client not using AdGuard (IPv6 DNS, cached lease, hard-coded DNS on device) | `nslookup sonarr.DOMAIN` on the client and look at which server answered |
 | Sonarr/Radarr "path does not exist" on import | Mismatched mounts | Every app must see `/data/...`, never `/downloads` or `/tv` |
 | Seerr crash-loops with permission errors | Config folder not owned by UID 1000 | `sudo chown -R 1000:1000 /opt/arr/config/seerr` |

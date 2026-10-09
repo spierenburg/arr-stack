@@ -25,7 +25,7 @@ All of this happens on **your copy** from [README → Step 0](../README.md#step-
 
 1. **Check the copy works:** open the *Actions* tab of your copy. The `validate` workflow should run green on its first commit.
 2. **Branch protection on `main`:** require pull requests and require the `validate` check to pass. CI checks digest pins, compose syntax and scripts ([.github/workflows/validate.yml](../.github/workflows/validate.yml)). On a free GitHub account this needs a **public** copy, because protection rules on private repos need a paid plan.
-3. **Install the [Renovate GitHub app](https://github.com/apps/renovate)** on the repo. Every Saturday it opens PRs that bump image digests: one for infra, one for media, one for Portainer ([renovate.json](../renovate.json)). Nothing merges automatically, because merging means deploying, and that's your call.
+3. **Install the [Renovate GitHub app](https://github.com/apps/renovate)** on the repo. Every Saturday it opens PRs that bump image digests: one for infra, one for media, one for usenet, one for Portainer ([renovate.json](../renovate.json)). Nothing merges automatically, because merging means deploying, and that's your call.
 4. **If the repo is private:** create a fine-grained GitHub token with read-only *Contents* access to just this repo. Portainer uses it to clone.
 
 ## Create the stacks in Portainer
