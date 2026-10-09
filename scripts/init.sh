@@ -33,16 +33,19 @@ chmod -R a=,a+rX,u+w,g+w "$DATA_ROOT"
 
 fail=0
 echo "==> Hardlink test"
-probe="$DATA_ROOT/torrents/.hardlink-probe"
-link="$DATA_ROOT/media/.hardlink-probe"
-echo probe > "$probe"
-if ln "$probe" "$link" 2>/dev/null && [[ "$(stat -c %i "$probe")" == "$(stat -c %i "$link")" ]]; then
-  echo "    [ok]   torrents/ and media/ are on one filesystem"
-else
-  echo "    [FAIL] hardlinks don't work between torrents/ and media/: every import would be a full copy"
-  fail=1
-fi
-rm -f "$probe" "$link"
+# usenet/ too: SABnzbd imports are moves, which are only instant on one filesystem
+for src in torrents usenet; do
+  probe="$DATA_ROOT/$src/.hardlink-probe"
+  link="$DATA_ROOT/media/.hardlink-probe"
+  echo probe > "$probe"
+  if ln "$probe" "$link" 2>/dev/null && [[ "$(stat -c %i "$probe")" == "$(stat -c %i "$link")" ]]; then
+    echo "    [ok]   $src/ and media/ are on one filesystem"
+  else
+    echo "    [FAIL] hardlinks don't work between $src/ and media/: every import would be a full copy"
+    fail=1
+  fi
+  rm -f "$probe" "$link"
+done
 
 echo "==> Host checks"
 for p in 53 80 3000 9443; do
