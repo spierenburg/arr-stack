@@ -17,6 +17,7 @@ Read-only debugging is always fine: `docker logs`, `docker ps`, `docker inspect`
 |---|---|---|---|
 | `infra` | `stacks/infra/compose.yaml` | Traefik, AdGuard Home | DNS for the whole house. A bad media change must never touch it |
 | `media` | `stacks/media/compose.yaml` | Gluetun, qBittorrent, *arr, Jellyfin, Seerr | Changes weekly (Renovate) |
+| `usenet` *(optional)* | `stacks/usenet/compose.yaml` | SABnzbd | Only useful with a paid Usenet provider. Not creating it costs nothing |
 
 ## Repository setup (on GitHub)
 
@@ -46,6 +47,8 @@ Portainer → **Stacks → Add stack**:
 - **Deploy the stack**
 
 Repeat for `media`, using `stacks/media/compose.yaml` and `stacks/media/stack.env.example`. `DOMAIN` and `CONFIG_ROOT` must be identical in both stacks.
+
+Optional, any time later: `usenet` with `stacks/usenet/compose.yaml` and `stacks/usenet/stack.env.example`, same values as `media`. Or re-run `sudo ./install.sh` and answer *yes* to Usenet: existing stacks are left alone.
 
 > Why not mount config files from the repo? Portainer clones the repo inside its own container, so `./file` bind mounts don't resolve to files on the host. Portainer CE doesn't support that. Flags and labels avoid the problem and keep everything in one reviewable file.
 

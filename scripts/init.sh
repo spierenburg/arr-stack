@@ -16,7 +16,7 @@ DATA_ROOT=${DATA_ROOT:-/srv/data}
 echo "Using PUID=$PUID PGID=$PGID CONFIG_ROOT=$CONFIG_ROOT DATA_ROOT=$DATA_ROOT"
 
 echo "==> Config folders in $CONFIG_ROOT"
-for app in adguard/work adguard/conf gluetun qbittorrent prowlarr sonarr radarr bazarr jellyfin seerr; do
+for app in adguard/work adguard/conf gluetun qbittorrent prowlarr sonarr radarr bazarr jellyfin seerr sabnzbd; do
   mkdir -p "$CONFIG_ROOT/$app"
 done
 chown -R "$PUID:$PGID" "$CONFIG_ROOT"
@@ -26,6 +26,7 @@ chown -R 1000:1000 "$CONFIG_ROOT/seerr"
 echo "==> Data folders in $DATA_ROOT (TRaSH Guides layout)"
 mkdir -p \
   "$DATA_ROOT/torrents/movies" "$DATA_ROOT/torrents/tv" \
+  "$DATA_ROOT/usenet/incomplete" "$DATA_ROOT/usenet/complete/movies" "$DATA_ROOT/usenet/complete/tv" \
   "$DATA_ROOT/media/movies" "$DATA_ROOT/media/tv"
 chown -R "$PUID:$PGID" "$DATA_ROOT"
 chmod -R a=,a+rX,u+w,g+w "$DATA_ROOT"

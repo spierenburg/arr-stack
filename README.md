@@ -44,6 +44,7 @@ A self-hosted media stack on one Docker host, deployed **only** through Portaine
 | Bazarr | media | `bazarr.home.arpa` | Subtitles |
 | Jellyfin | media | `jellyfin.home.arpa` | Media server. Local logins, so it works offline |
 | Seerr | media | `requests.home.arpa` | Request UI for the household |
+| SABnzbd *(optional)* | usenet | `sabnzbd.home.arpa` | Usenet downloads. Only with a paid Usenet provider + NZB indexer |
 | Portainer | bootstrap | `https://SERVER_IP:9443` | Deploys the stacks from git |
 
 ## Deliberately not included
@@ -86,7 +87,7 @@ The installer does steps 1 and 3 below:
 - frees port 53 if `systemd-resolved` holds it (asks first)
 - creates the folders and runs the hardlink test
 - bootstraps Portainer and creates its admin user
-- creates the `infra` and `media` **Git stacks** through the Portainer API
+- creates the `infra` and `media` **Git stacks** through the Portainer API, plus `usenet` (SABnzbd) if you say yes
 
 Before changing anything, it checks the settings, checks that the repo is readable, and checks that every image is digest-pinned. **It never runs `docker compose up` on the stacks.** Portainer deploys them from git, so the result is identical to the manual route. It's safe to re-run: finished steps are skipped and existing stacks are never touched. Secrets are typed in hidden. They're never written to disk or passed as command-line arguments, and they end up only in Portainer's stack variables.
 
@@ -100,7 +101,7 @@ Each guide ends with a check that it worked.
 2. [Local names](docs/02-local-names.md): `home.arpa`, why there's no HTTPS, browser quirks
 3. [GitOps: deploying the stacks](docs/03-gitops-stacks.md): repo settings, Renovate, Portainer Git stacks
 4. [DNS with AdGuard Home](docs/04-dns-adguard.md): local names, router DHCP
-5. [Wiring the apps together](docs/05-apps.md): qBittorrent → Prowlarr → Sonarr/Radarr → Jellyfin → Seerr
+5. [Wiring the apps together](docs/05-apps.md): qBittorrent (and optionally SABnzbd) → Prowlarr → Sonarr/Radarr → Jellyfin → Seerr
 6. [Remote access](docs/06-remote-access.md): Tailscale
 7. [Operations](docs/07-operations.md): updates, rollback, backups, troubleshooting
 
@@ -113,6 +114,7 @@ stacks/infra/compose.yaml          Traefik + AdGuard        (Portainer stack "in
 stacks/infra/stack.env.example     variable names for that stack
 stacks/media/compose.yaml          VPN, downloads, *arr, Jellyfin, Seerr  (stack "media")
 stacks/media/stack.env.example
+stacks/usenet/compose.yaml         SABnzbd, optional          (stack "usenet")
 bootstrap/portainer.compose.yaml   Portainer itself, started once by hand
 renovate.json                      weekly digest-bump PRs, grouped per stack
 .github/workflows/validate.yml     CI gate: digest pins, compose syntax, shellcheck

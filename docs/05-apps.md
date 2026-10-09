@@ -37,6 +37,19 @@ docker logs gluetun 2>&1 | grep -i "port forwarded"
 
 Enter that port under qBittorrent → Options → Connection → *Listening port*. The VPN provider can change the port when the tunnel reconnects. The Gluetun wiki explains how to automate updating it (`VPN_PORT_FORWARDING_UP_COMMAND`).
 
+## 5.1b SABnzbd (only with the optional `usenet` stack)
+
+You need a Usenet **provider** (the servers, e.g. Eweka, Newshosting, Frugal) and at least one NZB **indexer** (the search, e.g. NZBGeek, DrunkenSlug). Both are usually paid. Skip this section without them.
+
+1. Open **`http://SERVER_IP:8080`**, by IP. SABnzbd refuses unknown hostnames until a login exists, and an IP is always allowed.
+2. The wizard asks for your provider: host, port 563, SSL on, username, password, connections.
+3. **Config → General → Security:** set a username and password. From now on `http://sabnzbd.home.arpa` works too.
+4. **Config → Folders:**
+   - *Temporary Download Folder*: `/data/usenet/incomplete`
+   - *Completed Download Folder*: `/data/usenet/complete`
+5. **Config → Categories:** `tv` with folder `tv`, `movies` with folder `movies`.
+6. **Config → General:** copy the **API key** for Sonarr and Radarr.
+
 ## 5.2 Sonarr and Radarr
 
 Do the same steps in both apps (Sonarr shown, Radarr in brackets):
@@ -50,6 +63,7 @@ Do the same steps in both apps (Sonarr shown, Radarr in brackets):
    - Host `gluetun`, port `8080`, plus the username and password from 5.1
    - Category `tv` (`movies`)
    - Click *Test*, then *Save*.
+   - **With SABnzbd:** also add **+ → SABnzbd**: host `sabnzbd`, port `8080`, its API key, category `tv` (`movies`).
 4. **Settings → General:** copy the **API key**. Prowlarr, Bazarr and Seerr need it.
 
 ## 5.3 Prowlarr (indexers)
@@ -60,7 +74,7 @@ Do the same steps in both apps (Sonarr shown, Radarr in brackets):
    - Sonarr server `http://sonarr:8989`
    - API key from 5.2
    Repeat for Radarr (`http://radarr:7878`).
-3. **Indexers → Add Indexer:** add your trackers. They sync to Sonarr and Radarr automatically.
+3. **Indexers → Add Indexer:** add your trackers, and your NZB indexers if you use SABnzbd. They sync to Sonarr and Radarr automatically.
 
 Some public indexers sit behind Cloudflare challenges. Those need FlareSolverr, which isn't included here. Add it only if you actually hit that.
 
