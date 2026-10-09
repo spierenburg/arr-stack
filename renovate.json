@@ -18,6 +18,12 @@
       "labels": ["media"]
     },
     {
+      "description": "Optional Usenet stack (SABnzbd).",
+      "matchFileNames": ["stacks/usenet/**"],
+      "groupName": "usenet stack images",
+      "labels": ["usenet"]
+    },
+    {
       "description": "Portainer is updated by hand (see bootstrap/), keep its PR separate.",
       "matchFileNames": ["bootstrap/**"],
       "groupName": "portainer",

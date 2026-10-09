@@ -1,0 +1,38 @@
+# Stack "usenet" (OPTIONAL): SABnzbd for Usenet downloads.
+# Only create this stack if you have a Usenet provider subscription and an NZB indexer.
+# Deployed ONLY by Portainer (Git stack, compose path stacks/usenet/compose.yaml).
+#
+# No VPN: Usenet downloads over SSL from your provider and uploads nothing to peers.
+#
+# Portainer stack environment variables (set in the UI, NOT in git):
+#   see stacks/usenet/stack.env.example
+
+services:
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest@sha256:382f9bd4e3f6df2abf7bcc92edada0c5bd4d4ff26eb5416f257ac54989464fa1
+    container_name: sabnzbd
+    # SABnzbd refuses unknown hostnames until a login is set. On first start it adds its
+    # own hostname to the allow-list, so Sonarr/Radarr can reach `sabnzbd:8080` right away.
+    hostname: sabnzbd
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    ports:
+      # First visit by IP (http://SERVER_IP:8080): an IP is always allowed. Set a login
+      # there and sabnzbd.<domain> works too (docs/05-apps.md)
+      - "8080:8080"
+    volumes:
+      - ${CONFIG_ROOT}/sabnzbd:/config
+      - ${DATA_ROOT}:/data
+    networks: [proxy]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.${DOMAIN}`)
+      - traefik.http.services.sabnzbd.loadbalancer.server.port=8080
+
+networks:
+  proxy:
+    external: true # created once during bootstrap

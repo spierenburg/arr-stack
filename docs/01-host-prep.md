@@ -61,6 +61,7 @@ sudo ./scripts/init.sh
 /opt/arr/config/<app>        app state (settings, databases): back this up
 /srv/data
 ├── torrents/{movies,tv}     qBittorrent downloads here
+├── usenet/…                 SABnzbd downloads here (only if you add the optional usenet stack)
 └── media/{movies,tv}        Sonarr/Radarr hardlink finished files here, Jellyfin reads here
 ```
 

@@ -93,7 +93,7 @@ preflight() {
 # ------------------------------------------------------------------ config
 ALLOWED_KEYS="DOMAIN TZ PUID PGID CONFIG_ROOT DATA_ROOT
 VPN_SERVICE_PROVIDER WIREGUARD_PRIVATE_KEY WIREGUARD_ADDRESSES VPN_SERVER_COUNTRIES VPN_PORT_FORWARDING
-REPO_URL REPO_REF REPO_USERNAME REPO_TOKEN PORTAINER_USER PORTAINER_PASSWORD"
+USENET REPO_URL REPO_REF REPO_USERNAME REPO_TOKEN PORTAINER_USER PORTAINER_PASSWORD"
 
 load_config() { # parse KEY=VALUE lines, no shell evaluation
   [[ -f $CONFIG ]] || die "config file not found: $CONFIG"
@@ -134,6 +134,9 @@ collect() {
   ask WIREGUARD_ADDRESSES   "WireGuard address (e.g. 10.2.0.2/32)"
   ask VPN_SERVER_COUNTRIES  "VPN server countries" "Netherlands"
   ask VPN_PORT_FORWARDING   "Provider port forwarding (on/off)" "off"
+  echo "    ${B}Usenet${N} (optional: SABnzbd, needs a paid Usenet provider + NZB indexer)"
+  echo "    Say no if unsure: re-running the installer later adds it and leaves the rest alone."
+  ask USENET            "Add the usenet stack (yes/no)" "no"
   echo "    ${B}GitOps${N}"
   echo "    The deploy repo decides what runs on this server: it must be YOUR copy (README step 0)."
   ask REPO_URL          "Git repo Portainer deploys from" "$remote_def"
@@ -169,6 +172,11 @@ validate() {
   [[ $WIREGUARD_PRIVATE_KEY =~ ^[A-Za-z0-9+/]{43}=$ ]] || die "WireGuard private key isn't a 44-char base64 key"
   [[ $WIREGUARD_ADDRESSES =~ ^[0-9.]+/[0-9]+ ]] || die "WIREGUARD_ADDRESSES should look like 10.2.0.2/32"
   [[ $VPN_PORT_FORWARDING =~ ^(on|off)$ ]] || die "VPN_PORT_FORWARDING must be on or off"
+  [[ $USENET =~ ^(yes|no)$ ]] || die "USENET must be yes or no"
+  if [[ $USENET == yes ]] && ss -Hltn 'sport = :8080' 2>/dev/null | grep -q . \
+       && ! docker inspect sabnzbd >/dev/null 2>&1; then
+    die "port 8080 is in use: SABnzbd needs it for its first-run wizard"
+  fi
   [[ ${#PORTAINER_PASSWORD} -ge 12 ]] || die "Portainer password must be at least 12 characters"
   ok "formats look right"
 
@@ -198,7 +206,7 @@ summary() {
     1. Free port 53 from systemd-resolved, if needed (asks first)
     2. Create $CONFIG_ROOT and $DATA_ROOT, owner $PUID:$PGID (scripts/init.sh)
     3. Create docker network 'proxy', start Portainer (bootstrap/)
-    4. Create Portainer Git stacks 'infra' and 'media'
+    4. Create Portainer Git stacks 'infra' and 'media'$([[ $USENET == yes ]] && echo " and 'usenet'")
          repo  $REPO_URL @ $REPO_REF
          poll  every 5m, re-pull images
        Portainer then deploys them from git. Anyone who can push to that
@@ -350,6 +358,7 @@ verify() {
     2. Router DHCP: DNS server = $ip (no public secondary)
     3. Wire the apps together                         docs/05-apps.md
     4. GitHub: branch protection on main + Renovate app   docs/03-gitops-stacks.md
+$([[ $USENET == yes ]] && echo "    SABnzbd wizard: http://$ip:8080  (set a login first)  docs/05-apps.md")
     Portainer: https://$ip:9443  (user '$PORTAINER_USER'; self-signed, accept the warning once)
     Once DNS is pointed at AdGuard: http://jellyfin.$DOMAIN
 EOF
@@ -377,4 +386,5 @@ portainer_endpoint
 create_stack infra DOMAIN CONFIG_ROOT
 create_stack media DOMAIN TZ PUID PGID CONFIG_ROOT DATA_ROOT \
   VPN_SERVICE_PROVIDER WIREGUARD_PRIVATE_KEY WIREGUARD_ADDRESSES VPN_SERVER_COUNTRIES VPN_PORT_FORWARDING
+[[ $USENET == yes ]] && create_stack usenet DOMAIN TZ PUID PGID CONFIG_ROOT DATA_ROOT
 verify
